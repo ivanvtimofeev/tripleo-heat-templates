@@ -181,6 +181,22 @@ outputs:
                   list_concat:
                     - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
                     - - *contrail_env_file
+            - contrail_analytics_provisioner:
+                image: {get_attr: [ContrailBase, role_data, contrail_provisioner_image_name]}
+                net: host
+                detach: true
+                user: root
+                restart: always
+                volumes:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                    - - /var/run/docker.sock:/var/run/docker.sock
+                environment:
+                  get_attr: [ContrailBase, role_data, contrail_base_env]
+                env_file:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
+                    - - *contrail_env_file            
               contrail_analytics_api:
                 image: &contrail_analytics_api_image {get_attr: [DockerContrailAnalyticsApiImageNormalize, contrail_image]}
                 net: host

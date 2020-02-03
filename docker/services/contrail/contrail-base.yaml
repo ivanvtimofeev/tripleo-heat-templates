@@ -97,6 +97,10 @@ parameters:
     description: image
     type: string
     default: "contrail-nodemgr"
+  DockerContrailProvisionerImageName:
+    description: image
+    type: string
+    default: "contrail-provisioner"
   SSLCertificate:
     default: ''
     description: >
@@ -239,12 +243,16 @@ resources:
     type: ../../../tools/contrail/contrail-image-normalize.yaml
     properties:
       GenericImageName: {get_param: DockerContrailNodemgrImageName}
-
+  ContrailProvisionerImageNormalize:
+    type: ../../../tools/contrail/contrail-image-normalize.yaml
+    properties:
+      GenericImageName: {get_param: DockerContrailProvisionerImageName}
 outputs:
   role_data:
     description: Shared role data for the Contrail services.
     value:
       contrail_nodemgr_image_name: {get_attr: [ContrailNodemgrImageNormalize, contrail_image]}
+      contrail_provisioner_image_name: {get_attr: [ContrailProvisionerImageNormalize, contrail_image]}      
       config_settings:
         map_merge:
         - contrail::admin_password: {get_param: AdminPassword}
