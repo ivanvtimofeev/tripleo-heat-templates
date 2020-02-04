@@ -89,6 +89,10 @@ parameters:
     default: {}
     description: Contrail Service settings
     type: json
+  ContrailDefaults:
+    default: []
+    description: List of tnv variables for provisioner container
+    type: json
   ContrailImageTag:
     default: 'latest'
     description: Contrail container image tag
@@ -547,6 +551,8 @@ outputs:
           - *contrail_auth_base_env
           - *contrail_auth_admin_env
           - null
+      contrail_defaults_env: &contrail_defaults_env
+          - {get_param: ContrailDefaults}
       contrail_base_auth_internal_env: &contrail_base_auth_internal_env
         list_concat:
           - *contrail_auth_base_env

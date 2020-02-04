@@ -192,7 +192,9 @@ outputs:
                     - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
                     - - /var/run/docker.sock:/var/run/docker.sock
                 environment:
-                  get_attr: [ContrailBase, role_data, contrail_base_env]
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_env]}
+                    - {get_attr: [ContrailBase, role_data, contrail_defaults_env]}  
                 env_file:
                   list_concat:
                     - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
