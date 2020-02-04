@@ -91,7 +91,7 @@ parameters:
     type: json
   ContrailDefaults:
     default: []
-    description: List of tnv variables for provisioner container
+    description: List of env variables for provisioner container
     type: json
   ContrailImageTag:
     default: 'latest'
