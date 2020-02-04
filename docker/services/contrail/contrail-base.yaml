@@ -551,8 +551,7 @@ outputs:
           - *contrail_auth_base_env
           - *contrail_auth_admin_env
           - null
-      contrail_defaults_env: &contrail_defaults_env
-          - {get_param: ContrailDefaults}
+      contrail_defaults_env: &contrail_defaults_env {get_param: ContrailDefaults}
       contrail_base_auth_internal_env: &contrail_base_auth_internal_env
         list_concat:
           - *contrail_auth_base_env
