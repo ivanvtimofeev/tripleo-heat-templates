@@ -170,28 +170,25 @@ outputs:
                       list_concat:
                         - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
                         - - *contrail_env_file
+                  contrail_analytics_snmp_provisioner:
+                    image: {get_attr: [ContrailBase, role_data, contrail_provisioner_image_name]}
+                    net: host
+                    detach: true
+                    user: root
+                    restart: always
+                    volumes:
+                      list_concat:
+                        - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                        - - /var/run/docker.sock:/var/run/docker.sock
+                    environment:
+                      list_concat:
+                        - {get_attr: [ContrailBase, role_data, contrail_base_env]}
+                        - {get_attr: [ContrailBase, role_data, contrail_defaults_env]}
+                    env_file:
+                      list_concat:
+                        - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
+                        - - *contrail_env_file
                 - null
-            - if:
-              - is_not_5_0
-              - contrail_analytics_snmp_provisioner:
-                image: {get_attr: [ContrailBase, role_data, contrail_provisioner_image_name]}
-                net: host
-                detach: true
-                user: root
-                restart: always
-                volumes:
-                  list_concat:
-                    - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
-                    - - /var/run/docker.sock:/var/run/docker.sock
-                environment:
-                  list_concat:
-                    - {get_attr: [ContrailBase, role_data, contrail_base_env]}
-                    - {get_attr: [ContrailBase, role_data, contrail_defaults_env]}
-                env_file:
-                  list_concat:
-                    - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
-                    - - *contrail_env_file
-              - null
       host_prep_tasks:
         list_concat:
           - {get_attr: [ContrailBase, role_data, contrail_host_prep_tasks_base]}
