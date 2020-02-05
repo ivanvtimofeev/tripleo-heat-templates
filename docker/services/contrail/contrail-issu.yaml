@@ -646,7 +646,7 @@ outputs:
                 env_file:
                   - *contrail_issu_env_file
                   - *contrail_issu_configdb_env_file
-            - contrail_config_database_provisioner:
+              contrail_config_database_provisioner:
                 image: *contrail_provisioner_image_name
                 net: host
                 detach: true
@@ -774,7 +774,7 @@ outputs:
                     - get_attr: [ContrailBase, role_data, contrail_base_env]
                     - - 'NODE_TYPE=config'
                 env_file: *contrail_issu_env_file
-            - contrail_config_provisioner:
+              contrail_config_provisioner:
                 image: *contrail_provisioner_image_name
                 net: host
                 detach: true
