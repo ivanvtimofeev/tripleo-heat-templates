@@ -209,6 +209,11 @@ parameters:
     type: string
     default: "contrail-nodemgr"
 
+  DockerContrailProvisionerImageName:
+    description: image
+    type: string
+    default: "contrail-provisioner"
+
   ContrailCA:
     default: ''
     description: Contrail CA, could be local or IPA
@@ -375,6 +380,12 @@ resources:
     type: ../../../tools/contrail/contrail-image-normalize.yaml
     properties:
       GenericImageName: {get_param: DockerContrailNodemgrImageName}
+      ContrailImageTag: {get_param: ContrailIssuImageTag}
+
+  DockerContrailProvisionerImageNormalize:
+    type: ../../../tools/contrail/contrail-image-normalize.yaml
+    properties:
+      GenericImageName: {get_param: DockerContrailProvisionerImageName}
       ContrailImageTag: {get_param: ContrailIssuImageTag}
 
   ContrailBase:
@@ -546,6 +557,12 @@ outputs:
       contrail_nodemgr_image_name: &contrail_nodemgr_image_name
         get_attr: [DockerContrailNodemgrImageNormalize, contrail_image]
 
+      contrail_provisioner_image_name: &contrail_provisioner_image_name
+        get_attr: [DockerContrailProvisionerImageNormalize, contrail_image]
+
+      contrail_provisioner_image_name: &contrail_provisioner_image_name
+        get_attr: [DockerContrailProvisionerImageNormalize, contrail_image]
+
       contrail_common_base_env: &contrail_common_base_env
         {get_attr: [ContrailBase, role_data, contrail_common_base_env]}
 
@@ -619,6 +636,30 @@ outputs:
                 environment:
                   list_concat:
                     - {get_attr: [ContrailBase, role_data, contrail_base_env]}
+                    - if:
+                      - contrail_configdb_min_disk_gb_unset
+                      - []
+                      - - list_join:
+                          - ''
+                          - - 'CONFIG_DATABASE_NODEMGR__DEFAULTS__minimum_diskGB='
+                            - {get_param: ContrailConfigDBMinDiskGB}
+                env_file:
+                  - *contrail_issu_env_file
+                  - *contrail_issu_configdb_env_file
+            - contrail_config_database_provisioner:
+                image: *contrail_provisioner_image_name
+                net: host
+                detach: true
+                user: root
+                restart: always
+                volumes:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                    - - /var/run/docker.sock:/var/run/docker.sock
+                environment:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_env]}
+                    - {get_attr: [ContrailBase, role_data, contrail_defaults_env]}
                     - if:
                       - contrail_configdb_min_disk_gb_unset
                       - []
@@ -733,6 +774,22 @@ outputs:
                     - get_attr: [ContrailBase, role_data, contrail_base_env]
                     - - 'NODE_TYPE=config'
                 env_file: *contrail_issu_env_file
+            - contrail_config_provisioner:
+                image: *contrail_provisioner_image_name
+                net: host
+                detach: true
+                user: root
+                restart: always
+                volumes:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                    - - /var/run/docker.sock:/var/run/docker.sock
+                environment:
+                  list_concat:
+                    - get_attr: [ContrailBase, role_data, contrail_base_env]
+                    - get_attr: [ContrailBase, role_data, contrail_defaults_env]
+                    - - 'NODE_TYPE=config'
+                env_file: *contrail_issu_env_file
               contrail_config_api:
                 image: &contrail_config_api_image {get_attr: [DockerContrailConfigApiImageNormalize, contrail_image]}
                 net: host
@@ -794,6 +851,22 @@ outputs:
                 environment:
                   list_concat:
                     - get_attr: [ContrailBase, role_data, contrail_base_env]
+                    - - 'NODE_TYPE=analytics'
+                env_file: *contrail_issu_env_file
+              contrail_analytics_provisioner:
+                image: *contrail_provisioner_image_name
+                net: host
+                detach: true
+                user: root
+                restart: always
+                volumes:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                    - - /var/run/docker.sock:/var/run/docker.sock
+                environment:
+                  list_concat:
+                    - get_attr: [ContrailBase, role_data, contrail_base_env]
+                    - get_attr: [ContrailBase, role_data, contrail_defaults_env]
                     - - 'NODE_TYPE=analytics'
                 env_file: *contrail_issu_env_file
               contrail_analytics_api:
@@ -894,6 +967,30 @@ outputs:
                 env_file:
                   - *contrail_issu_env_file
                   - *contrail_issu_analyticsdb_env_file
+              contrail_analytics_database_provisioner:
+                image: *contrail_provisioner_image_name
+                net: host
+                detach: true
+                user: root
+                restart: always
+                volumes:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                    - - /var/run/docker.sock:/var/run/docker.sock
+                environment:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_env]}
+                    - {get_attr: [ContrailBase, role_data, contrail_defaults_env]}
+                    - if:
+                      - contrail_analyticsdb_min_disk_gb_unset
+                      - []
+                      - - list_join:
+                          - ''
+                          - - 'DATABASE_NODEMGR__DEFAULTS__minimum_diskGB='
+                            - {get_param: ContrailAnalyticsDBMinDiskGB}
+                env_file:
+                  - *contrail_issu_env_file
+                  - *contrail_issu_analyticsdb_env_file
               contrail_analytics_alarmgen:
                 image: &contrail_analytics_alarmgen_image {get_attr: [DockerContrailAnalyticsAlarmGenImageNormalize, contrail_image]}
                 net: host
@@ -952,6 +1049,22 @@ outputs:
                         - get_attr: [ContrailBase, role_data, contrail_base_env]
                         - - 'NODE_TYPE=analytics-snmp'
                     env_file: *contrail_issu_env_file
+                  contrail_analytics_snmp_provisioner:
+                    image: *contrail_provisioner_image_name
+                    net: host
+                    detach: true
+                    user: root
+                    restart: always
+                    volumes:
+                      list_concat:
+                        - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                        - - /var/run/docker.sock:/var/run/docker.sock
+                    environment:
+                      list_concat:
+                        - get_attr: [ContrailBase, role_data, contrail_base_env]
+                        - get_attr: [ContrailBase, role_data, contrail_defaults_env]
+                        - - 'NODE_TYPE=analytics-snmp'
+                    env_file: *contrail_issu_env_file
                   contrail_analytics_alarm_nodemgr:
                     image: *contrail_nodemgr_image_name
                     net: host
@@ -965,6 +1078,22 @@ outputs:
                     environment:
                       list_concat:
                         - get_attr: [ContrailBase, role_data, contrail_base_env]
+                        - - 'NODE_TYPE=analytics-alarm'
+                    env_file: *contrail_issu_env_file
+                  contrail_analytics_alarm_provisioner:
+                    image: *contrail_provisioner_image_name
+                    net: host
+                    detach: true
+                    user: root
+                    restart: always
+                    volumes:
+                      list_concat:
+                        - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                        - - /var/run/docker.sock:/var/run/docker.sock
+                    environment:
+                      list_concat:
+                        - get_attr: [ContrailBase, role_data, contrail_base_env]
+                        - get_attr: [ContrailBase, role_data, contrail_defaults_env]
                         - - 'NODE_TYPE=analytics-alarm'
                     env_file: *contrail_issu_env_file
                 - null

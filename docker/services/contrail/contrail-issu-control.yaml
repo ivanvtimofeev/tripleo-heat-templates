@@ -76,6 +76,11 @@ parameters:
     type: string
     default: "contrail-nodemgr"
 
+  DockerContrailProvisionerImageName:
+    description: image
+    type: string
+    default: "contrail-provisioner"
+
   ContrailCA:
     default: ''
     description: Contrail CA, could be local or IPA
@@ -122,6 +127,12 @@ resources:
       GenericImageName: {get_param: DockerContrailNodemgrImageName}
       ContrailImageTag: {get_param: ContrailIssuImageTag}
 
+  DockerContrailProvisionerImageNormalize:
+    type: ../../../tools/contrail/contrail-image-normalize.yaml
+    properties:
+      GenericImageName: {get_param: DockerContrailProvisionerImageName}
+      ContrailImageTag: {get_param: ContrailIssuImageTag}
+
   ContrailBase:
     type: contrail-base.yaml
     properties:
@@ -165,6 +176,9 @@ outputs:
       contrail_nodemgr_image_name: &contrail_nodemgr_image_name
         get_attr: [DockerContrailNodemgrImageNormalize, contrail_image]
 
+      contrail_provisioner_image_name: &contrail_provisioner_image_name
+        get_attr: [DockerContrailProvisionerImageNormalize, contrail_image]
+
       contrail_common_base_env: &contrail_common_base_env
         {get_attr: [ContrailBase, role_data, contrail_common_base_env]}
 
@@ -186,6 +200,24 @@ outputs:
             environment:
               list_concat:
                 - get_attr: [ContrailBase, role_data, contrail_base_env]
+                - - 'NODE_TYPE=control'
+            env_file: *contrail_issu_control_env_file
+          contrail_control_provisioner:
+            image: *contrail_provisioner_image_name
+            net: host
+            detach: true
+            user: root
+            restart: always
+            volumes:
+              list_concat:
+                - {get_attr: [ContrailBase, role_data, contrail_base_volumes]}
+                - - /var/run/docker.sock:/var/run/docker.sock
+            environment:
+              list_concat:
+                - get_attr:
+                  list_concat:
+                    - {get_attr: [ContrailBase, role_data, contrail_base_env]} 
+                    - {get_attr: [ContrailBase, role_data, contrail_defaults_env]} 
                 - - 'NODE_TYPE=control'
             env_file: *contrail_issu_control_env_file
           contrail_control_control:
