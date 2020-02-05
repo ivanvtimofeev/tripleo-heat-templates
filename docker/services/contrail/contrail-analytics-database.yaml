@@ -195,7 +195,7 @@ outputs:
                   list_concat:
                     - {get_attr: [ContrailBase, role_data, contrail_base_env_file]}
                     - - *contrail_env_file
-            - contrail_analytics_database_provisioner:
+              contrail_analytics_database_provisioner:
                 image: {get_attr: [ContrailBase, role_data, contrail_provisioner_image_name]}
                 net: host
                 detach: true
